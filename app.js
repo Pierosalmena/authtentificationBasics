@@ -66,6 +66,13 @@ app.use(session({secret: "cats", resave: false, saveUninitialized: false}))
 app.use(passport.session());
 app.use(express.urlencoded({extended: false}));
 // app.use("/", signupRouter);
+
+app.use((req,res, next) => {
+  req.me = users[1];
+  next();
+});
+
+
 app.get("/sign-up",(req, res) => res.render("sign-up-form"));
 
 app.post("/sign-up", async (req, res, next) => {
@@ -141,10 +148,27 @@ let users = {
 
   app.post('/messages', (req, res) => {
     const id = uuidv4();
-    const message = {id, text: req.body.text,}
+    const message = {id, 
+      text: req.body.text,
+      userId: req.me.id,
+    }
 
     messages[id] = message;
     return res.send(message)
+  })
+
+  app.delete('/messages/:messageId', (req, res) => {
+    const {
+      [req.params.messageId]: message,
+      ...otherMessages
+    } = messages;
+
+    messages = otherMessages;
+    return res.send(message);
+  });
+
+  app.get('/session', (req,res) => {
+    return res.send(users[req.me.id]);
   })
   
 //   app.post('/users', (req, res) => {
